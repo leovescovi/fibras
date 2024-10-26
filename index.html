@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contagem de Fibras</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 50%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .search-section {
+            padding: 15px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            margin-top: 20px;
+            background-color: #e9f5ff;
+        }
+        #resultadoBusca {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #333;
+            text-align: left;
+        }
+        .resultado-item {
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-weight: normal;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contagem de Fibras</h1>
+        
+        <div class="search-section">
+            <label for="tipoCabo">Escolha o tipo de cabo: </label>
+            <select id="tipoCabo" onchange="atualizarConfiguracao()">
+                <option value="24">Cabo de 24 fibras</option>
+                <option value="36">Cabo de 36 fibras</option>
+                <option value="48">Cabo de 48 fibras</option>
+                <option value="72">Cabo de 72 fibras</option>
+                <option value="144">Cabo de 144 fibras</option>
+            </select>
+            <br><br>
+            <label for="fibraNumero">Digite o número da fibra: </label>
+            <input type="number" id="fibraNumero" min="1" oninput="buscarFibraAutomatica()">
+            <div id="resultadoBusca"></div>
+        </div>
+    </div>
+
+    <script>
+        const cores = {
+            "Verde": "#008000",
+            "Amarelo": "#FFFF00",
+            "Branco": "#FFFFFF",
+            "Azul": "#0000FF",
+            "Vermelho": "#FF0000",
+            "Violeta": "#8A2BE2",
+            "Marrom": "#A52A2A",
+            "Rosa": "#FFC0CB",
+            "Preto": "#000000",
+            "Cinza": "#808080",
+            "Laranja": "#FFA500",
+            "Aqua": "#00FFFF"
+        };
+
+        const nomesCores = ["Verde", "Amarelo", "Branco", "Azul", "Vermelho", "Violeta", "Marrom", "Rosa", "Preto", "Cinza", "Laranja", "Aqua"];
+
+        const configuracoesCabos = {
+            "24": { totalFibras: 24, fibrasPorGrupo: 6, totalGrupos: 4 },
+            "36": { totalFibras: 36, fibrasPorGrupo: 6, totalGrupos: 6 },
+            "48": { totalFibras: 48, fibrasPorGrupo: 12, totalGrupos: 4 },
+            "72": { totalFibras: 72, fibrasPorGrupo: 12, totalGrupos: 6 },
+            "144": { totalFibras: 144, fibrasPorGrupo: 12, totalGrupos: 12 }
+        };
+
+        let configuracaoAtual = configuracoesCabos["24"];
+
+        function atualizarConfiguracao() {
+            const tipoCabo = document.getElementById("tipoCabo").value;
+            configuracaoAtual = configuracoesCabos[tipoCabo];
+            document.getElementById("fibraNumero").max = configuracaoAtual.totalFibras * (tipoCabo === "144" ? 6 : 1);
+            document.getElementById("resultadoBusca").innerHTML = '';
+        }
+
+        function obterCorTubo(grupo) {
+            return nomesCores[(grupo - 1) % 12];
+        }
+
+        function obterCorFibra(posicao) {
+            return nomesCores[(posicao - 1) % 12];
+        }
+
+        function buscarFibraAutomatica() {
+            const fibraNumeroInput = parseInt(document.getElementById('fibraNumero').value);
+            const resultadoBusca = document.getElementById('resultadoBusca');
+            const tipoCabo = document.getElementById("tipoCabo").value;
+
+            if (fibraNumeroInput >= 1 && fibraNumeroInput <= (configuracaoAtual.totalFibras * (tipoCabo === "144" ? 6 : 1))) {
+                const tronco = tipoCabo === "144" ? Math.ceil(fibraNumeroInput / 144) : 1;
+                const fibraNumero = fibraNumeroInput - (tronco - 1) * 144;
+                const grupo = Math.ceil(fibraNumero / configuracaoAtual.fibrasPorGrupo);
+                const posicaoFibra = (fibraNumero % configuracaoAtual.fibrasPorGrupo) || configuracaoAtual.fibrasPorGrupo;
+                const corTubo = obterCorTubo(grupo);
+                const corFibra = obterCorFibra(posicaoFibra);
+
+                const corTextoFibra = (corFibra === "Verde" || corFibra === "Azul" || corFibra === "Violeta" || corFibra === "Marrom" || corFibra === "Preto") ? "#FFFFFF" : "#000000";
+                const corTextoTubo = (corTubo === "Verde" || corTubo === "Azul" || corTubo === "Violeta" || corTubo === "Marrom" || corTubo === "Preto") ? "#FFFFFF" : "#000000";
+
+                resultadoBusca.innerHTML = `
+                    <div style="text-align: left;">
+                        <p>Fibra <span class="resultado-item" style="background-color: ${cores[corFibra]}; color: ${corTextoFibra};">${fibraNumeroInput}: ${corFibra}</span></p>
+                        <p>Grupo <span class="resultado-item" style="background-color: ${cores[corTubo]}; color: ${corTextoTubo};">${grupo}: ${corTubo}</span></p>
+                        <p>Tronco <span class="resultado-item">${tronco}</span></p>
+                    </div>
+                `;
+            } else {
+                resultadoBusca.innerHTML = '<p>Número de fibra inválido para o tipo de cabo selecionado.</p>';
+            }
+        }
+
+        atualizarConfiguracao();  // Inicializa com o cabo de 24 fibras
+    </script>
+</body>
+</html>
